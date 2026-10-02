@@ -225,7 +225,7 @@ main { padding: 12px; }
 .form-field label, .form-row label { display: block; margin-bottom: 5px; font-size: 11px; color: var(--muted); font-weight: 700; }
 .form-field.full { grid-column: 1 / -1; }
 input[type="text"], input[type="date"], input[type="color"], input[type="number"], select, textarea {
-  width: 100%;
+  width: 90%;
   border: 1px solid #dfe2e7;
   border-radius: 10px;
   background: #fff;
