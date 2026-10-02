@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="時間割">
+  <title>時間割</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-current-view="timetable">
+  <div id="app">
+    <header class="app-header">
+      <div class="header-main">
+        <div>
+          <h1 id="page-title">時間割</h1>
+          <p id="week-range" class="week-range"></p>
+        </div>
+        <div class="header-actions">
+          <button id="prev-week" class="icon-button" aria-label="前の週">‹</button>
+          <button id="today-button" class="text-button">今日</button>
+          <button id="next-week" class="icon-button" aria-label="次の週">›</button>
+          <button id="timetable-mode-toggle" class="text-button">教科別</button>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section id="view-timetable" class="view active-view" aria-label="時間割"></section>
+      <section id="view-input" class="view" aria-label="予定入力">
+        <div class="section-heading">
+          <div>
+            <h2>予定入力</h2>
+            <p>手入力かJSON一括入力でデータを登録します</p>
+          </div>
+        </div>
+        <div class="segmented" role="tablist" aria-label="入力方法">
+          <button class="segmented-button active" data-input-tab="manual">手入力</button>
+          <button class="segmented-button" data-input-tab="json">JSON入力</button>
+        </div>
+        <div id="input-tab-manual" class="input-tab active-input-tab">
+          <div class="sub-segmented" role="tablist" aria-label="手入力の種類">
+            <button class="sub-tab active" data-manual-tab="calendar">年間予定</button>
+            <button class="sub-tab" data-manual-tab="schedule">通常時間割</button>
+            <button class="sub-tab" data-manual-tab="exam">考査</button>
+            <button class="sub-tab" data-manual-tab="override">時間割変更</button>
+          </div>
+          <div id="manual-calendar" class="manual-panel active-panel"></div>
+          <div id="manual-schedule" class="manual-panel"></div>
+          <div id="manual-exam" class="manual-panel"></div>
+          <div id="manual-override" class="manual-panel"></div>
+        </div>
+        <div id="input-tab-json" class="input-tab">
+          <div class="sub-segmented json-segmented" role="tablist" aria-label="JSONの種類">
+            <button class="sub-tab active" data-json-tab="calendar">年間予定</button>
+            <button class="sub-tab" data-json-tab="schedule">通常時間割</button>
+            <button class="sub-tab" data-json-tab="exam">考査</button>
+            <button class="sub-tab" data-json-tab="override">時間割変更</button>
+            <button class="sub-tab" data-json-tab="all">全体</button>
+          </div>
+          <div class="card">
+            <h3 id="json-editor-title">年間予定のJSON</h3>
+            <p id="json-editor-help" class="muted">localStorage の calendar 部分だけを編集します。JSONを読み込むと、この部分だけが更新されます。</p>
+            <textarea id="json-input" class="code-input json-editor" spellcheck="false"></textarea>
+            <div class="button-row">
+              <button id="json-replace" class="primary-button">読み込む（全体を置換）</button>
+              <button id="json-merge" class="secondary-button">読み込む（追加）</button>
+            </div>
+            <div id="json-status" class="status-box" aria-live="polite"></div>
+          </div>
+          <div class="card">
+            <h3>共有用JSON</h3>
+            <p class="muted">該当部分のJSONデータです。コピーして他の人に共有できます。</p>
+            <textarea id="json-share-output" class="code-input json-share-output" spellcheck="false" readonly></textarea>
+            <div class="button-row">
+              <button id="json-refresh-share" class="secondary-button">現在のデータを表示</button>
+              <button id="json-copy-share" class="primary-button">JSONをコピー</button>
+            </div>
+          </div>
+          <details class="card prompt-card">
+            <summary>AI用JSON生成プロンプトの例</summary>
+            <div class="prompt-actions"><button id="copy-prompt" class="secondary-button small-button">プロンプトをコピー</button></div>
+            <pre id="ai-prompt" class="prompt-block"></pre>
+          </details>
+          <details class="card schema-card">
+            <summary>JSONの説明</summary>
+            <pre id="schema-example" class="prompt-block"></pre>
+          </details>
+        </div>
+      </section>
+      <section id="view-settings" class="view" aria-label="設定">
+        <div class="section-heading">
+          <div><h2>設定</h2><p>表示や教科ごとの情報を設定します</p></div>
+        </div>
+        <details class="card collapsible-card"><summary>前期・後期</summary><div class="collapsible-content"><div class="form-row inline-row"><label for="term-change-month">後期開始月</label><select id="term-change-month"></select></div><button id="save-term-settings" class="primary-button">保存</button></div></details>
+        <details class="card collapsible-card"><summary>曜日の色</summary><div class="collapsible-content"><p class="muted">曜日ごとに日付ヘッダーの背景色を設定します。</p><div id="weekday-colors-list" class="weekday-colors-list"></div><button id="save-weekday-colors" class="primary-button">曜日の色を保存</button></div></details>
+        <details class="card collapsible-card holiday-settings-card"><summary>祝日</summary><div class="collapsible-content"><p class="muted">祝日の日付ヘッダーの表示色を変更できます。</p><div class="form-row inline-row"><label for="holiday-color">祝日の背景色</label><input id="holiday-color" type="color" value="#ffdfe3"></div><div class="button-row"><button id="save-holiday-color" class="primary-button">祝日の色を保存</button><button id="sync-holidays" class="secondary-button">祝日をAPIから更新</button></div><div id="holiday-api-status" class="holiday-api-status" aria-live="polite">起動時に祝日APIから自動取得します。</div></div></details>
+        <details class="card collapsible-card"><summary>種類の色</summary><div class="collapsible-content"><p class="muted">年間予定で設定されている種類ごとに、背景色を設定できます。</p><div id="schedule-type-colors-list" class="weekday-colors-list"></div><button id="save-schedule-type-colors" class="primary-button">種類の色を保存</button></div></details>
+        <details class="card collapsible-card"><summary>教科の色</summary><div class="collapsible-content"><div class="card-title-row"><div><p class="muted">時間割上の教科ごとの色を決めます。</p></div><button id="add-subject-color" class="secondary-button small-button">教科を追加</button></div><div id="subject-colors-list" class="settings-list"></div><button id="save-subject-colors" class="primary-button">色設定を保存</button></div></details>
+        <details class="card collapsible-card"><summary>教科の名前</summary><div class="collapsible-content"><div class="card-title-row"><div><p class="muted">それぞれの教科の表示名をここで設定できます。</p></div><button id="add-subject-name" class="secondary-button small-button">教科を追加</button></div><div id="subject-names-list" class="settings-list"></div><button id="save-subject-names" class="primary-button">教科名を保存</button></div></details>
+        <details class="card danger-card collapsible-card"><summary>データ管理</summary><div class="collapsible-content"><p class="muted">localStorageにJSON形式で保存された、予定や設定のデータをダウンロードできます。バックアップやデバイスの引継ぎ時などに使用できます。予定入力/JSON入力/全体 と同じものです。</p><div class="button-row"><button id="export-data" class="secondary-button">バックアップJSONを出力</button><button id="reset-data" class="danger-button">初期化</button></div></div></details>
+      </section>
+    </main>
+    <nav class="bottom-nav" aria-label="メニュー">
+      <button class="nav-item active" data-view="timetable"><span class="nav-icon">▦</span><span>時間割</span></button>
+      <button class="nav-item" data-view="input"><span class="nav-icon">＋</span><span>予定入力</span></button>
+      <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>設定</span></button>
+    </nav>
+  </div>
+  <div id="lesson-modal" class="modal-overlay hidden" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button id="modal-close" class="modal-close" aria-label="閉じる">×</button><div id="modal-content"></div></div></div>
+  <script src="script.js"></script>
+</body>
+</html>
